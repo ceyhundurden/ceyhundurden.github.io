@@ -1,0 +1,155 @@
+.root {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background:
+    radial-gradient(1px 1px at 20% 30%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1px 1px at 70% 60%, rgba(200, 215, 255, 0.45), transparent),
+    radial-gradient(1px 1px at 40% 80%, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1px 1px at 85% 20%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1.5px 1.5px at 10% 70%, rgba(200, 215, 255, 0.5), transparent),
+    radial-gradient(ellipse at 50% 40%, rgba(40, 52, 96, 0.35), transparent 60%),
+    var(--bg);
+  overflow: auto;
+}
+
+.glow {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 156, 255, 0.18), transparent 65%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.card {
+  position: relative;
+  width: min(400px, 100%);
+  margin: auto; /* centers, but stays scrollable when taller than the viewport */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px 26px 22px;
+  border-radius: 16px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border-strong);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+}
+
+.title {
+  margin: 8px 0 0;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+.sub {
+  margin: 0 0 6px;
+  font-size: 13.5px;
+  color: var(--text-faint);
+}
+
+.steps {
+  margin: 0 0 4px;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+.steps b {
+  font-weight: 600;
+  color: var(--text);
+}
+.steps code {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(143, 176, 255, 0.1);
+}
+.steps a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.steps a:hover {
+  text-decoration: underline;
+}
+
+.note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+.input {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--panel-border-strong);
+  background: rgba(5, 6, 10, 0.6);
+  outline: none;
+  font-size: 15px;
+}
+.input:focus {
+  border-color: rgba(143, 176, 255, 0.6);
+  box-shadow: 0 0 0 3px rgba(143, 176, 255, 0.12);
+}
+
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.button {
+  margin-top: 4px;
+  padding: 11px 12px;
+  border-radius: 9px;
+  border: 0;
+  background: linear-gradient(180deg, #9db9ff, #7c9cff);
+  color: #0a0d18;
+  font-weight: 600;
+  font-size: 14.5px;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(124, 156, 255, 0.3);
+}
+.button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.back {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-faint);
+  text-decoration: none;
+  text-align: center;
+}
+.back:hover {
+  color: var(--text-dim);
+}

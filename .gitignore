@@ -1,0 +1,8 @@
+node_modules
+.next
+out
+.env*
+*.tmp
+*.tsbuildinfo
+next-env.d.ts
+.claude/settings.local.json

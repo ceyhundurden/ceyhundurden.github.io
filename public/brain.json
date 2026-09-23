@@ -1,0 +1,33 @@
+{
+  "nodes": [
+    {
+      "id": "eMgKQfQ5Aa1O",
+      "kind": "main",
+      "title": "test",
+      "x": -111,
+      "y": -131,
+      "color": "#7c9cff",
+      "blocks": [],
+      "createdAt": "2026-09-23T18:43:57.499Z",
+      "updatedAt": "2026-09-23T18:43:57.499Z"
+    },
+    {
+      "id": "71s420POPqTf",
+      "kind": "sub",
+      "title": "yout",
+      "x": 290,
+      "y": -192,
+      "blocks": [],
+      "createdAt": "2026-09-23T18:44:37.983Z",
+      "updatedAt": "2026-09-23T18:45:25.562Z"
+    }
+  ],
+  "edges": [
+    {
+      "id": "bja4r6T7moTY",
+      "source": "eMgKQfQ5Aa1O",
+      "target": "71s420POPqTf",
+      "kind": "link"
+    }
+  ]
+}
