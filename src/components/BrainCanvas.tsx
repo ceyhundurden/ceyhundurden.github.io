@@ -395,5 +395,5 @@ export default function BrainCanvas(props: BrainCanvasProps) {
     onReady?.();
   }, [onReady]);
 
-  return <canvas ref={canvasRef} className={styles.canvas} aria-label="Zihin haritası tuvali" />;
+  return <canvas ref={canvasRef} className={styles.canvas} aria-label="Mind map canvas" />;
 }

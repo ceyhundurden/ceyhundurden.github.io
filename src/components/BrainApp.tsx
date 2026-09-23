@@ -39,10 +39,10 @@ export default function BrainApp() {
         } catch (e) {
           if (e instanceof GitHubError && e.tokenInvalid) {
             clearToken();
-            notice = `Giriş geçersiz: ${e.message}. Tekrar giriş yap.`;
+            notice = `Sign-in is no longer valid: ${e.message}. Please sign in again.`;
           } else {
-            const msg = e instanceof Error ? e.message : "bilinmeyen hata";
-            notice = `Düzenleme modu açılamadı (${msg}); salt okunur gösteriliyor.`;
+            const msg = e instanceof Error ? e.message : "unknown error";
+            notice = `Couldn't enable edit mode (${msg}); showing read-only.`;
           }
         }
       }
@@ -50,7 +50,7 @@ export default function BrainApp() {
         const graph = await loadPublicGraph();
         if (!cancelled) setLoaded({ graph, backend: null, sha: null, notice });
       } catch (e) {
-        if (!cancelled) setLoadError(e instanceof Error ? e.message : "harita yüklenemedi");
+        if (!cancelled) setLoadError(e instanceof Error ? e.message : "couldn't load the map");
       }
     })();
     return () => {
@@ -68,7 +68,7 @@ export default function BrainApp() {
         <div className={styles.loading} role="status">
           {loadError ? (
             <>
-              <p className={styles.emptyTitle}>Harita yüklenemedi</p>
+              <p className={styles.emptyTitle}>Couldn&apos;t load the map</p>
               <p className={styles.emptySub}>{loadError}</p>
               <button
                 type="button"
@@ -78,11 +78,11 @@ export default function BrainApp() {
                   setAttempt((a) => a + 1);
                 }}
               >
-                Tekrar dene
+                Try again
               </button>
             </>
           ) : (
-            <span className={styles.loadingDot} aria-label="Yükleniyor" />
+            <span className={styles.loadingDot} aria-label="Loading" />
           )}
         </div>
       </main>
@@ -187,7 +187,7 @@ function BrainWorkspace({ initialGraph, backend: initialBackend, initialSha, not
   }, [notice, toast]);
 
   const fail = useCallback(
-    (e: unknown, fallback = "İşlem başarısız oldu") => {
+    (e: unknown, fallback = "Something went wrong") => {
       const detail = e instanceof Error && e.message ? e.message : "";
       toast(detail ? `${fallback}: ${detail}` : fallback, "error");
     },
@@ -203,7 +203,7 @@ function BrainWorkspace({ initialGraph, backend: initialBackend, initialSha, not
   const savedVersionRef = useRef(0);
   const savingRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const summaryRef = useRef("güncelleme");
+  const summaryRef = useRef("update");
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -233,7 +233,7 @@ function BrainWorkspace({ initialGraph, backend: initialBackend, initialSha, not
       ok = true;
     } catch (e) {
       setSaveState("error");
-      setSaveError(e instanceof Error && e.message ? e.message : "bilinmeyen hata");
+      setSaveError(e instanceof Error && e.message ? e.message : "unknown error");
     } finally {
       savingRef.current = false;
     }
@@ -325,9 +325,9 @@ function BrainWorkspace({ initialGraph, backend: initialBackend, initialSha, not
         const next = ops.applyNodeDraft(graphRef.current, id, patch);
         setGraph(next);
         const title = next.nodes.find((n) => n.id === id)?.title.trim();
-        markDirty(`“${short(title || "modül")}” düzenlendi`);
+        markDirty(`edited “${short(title || "module")}”`);
       } catch (e) {
-        fail(e, "Değişiklik uygulanamadı");
+        fail(e, "Couldn't apply the change");
       }
     },
     [fail, markDirty, setGraph],
@@ -347,13 +347,13 @@ function BrainWorkspace({ initialGraph, backend: initialBackend, initialSha, not
           parentId: c.mode === "sub" ? c.parentId : undefined,
         });
         setGraph(next);
-        markDirty(`yeni ${c.mode === "main" ? "ana" : "alt"} modül “${short(node.title)}”`);
+        markDirty(`new ${c.mode === "main" ? "main module" : "sub-module"} “${short(node.title)}”`);
         setSelectedNodeId(node.id);
         history.replaceState(null, "", `#${node.id}`);
         // keep the new node visible next to the panel without a big jump
         apiRef.current?.flyToNode(node, panelWidthFor(true));
       } catch (e) {
-        fail(e, "Modül oluşturulamadı");
+        fail(e, "Couldn't create the module");
       }
     },
     [fail, markDirty, panelWidthFor, setGraph],
@@ -363,13 +363,13 @@ function BrainWorkspace({ initialGraph, backend: initialBackend, initialSha, not
     (id: string) => {
       const n = graphRef.current.nodes.find((x) => x.id === id);
       if (!n) return;
-      if (!window.confirm(`“${n.title}” modülü ve tüm bağlantıları silinsin mi?`)) return;
+      if (!window.confirm(`Delete module “${n.title}” and all its connections?`)) return;
       try {
         setGraph(ops.deleteNode(graphRef.current, id).graph);
-        markDirty(`“${short(n.title)}” silindi`);
+        markDirty(`deleted “${short(n.title)}”`);
         if (selectedNodeId === id) selectNode(null, false);
       } catch (e) {
-        fail(e, "Silinemedi");
+        fail(e, "Couldn't delete");
       }
     },
     [fail, markDirty, selectNode, selectedNodeId, setGraph],
@@ -380,10 +380,10 @@ function BrainWorkspace({ initialGraph, backend: initialBackend, initialSha, not
       try {
         setGraph(ops.createEdge(graphRef.current, { source, target, kind: "link" }).graph);
         const t = (id: string) => short(graphRef.current.nodes.find((n) => n.id === id)?.title ?? "?", 24);
-        markDirty(`bağıntı “${t(source)}” → “${t(target)}”`);
+        markDirty(`link “${t(source)}” → “${t(target)}”`);
       } catch (e) {
-        if (e instanceof ops.ConflictError) toast("Bu iki modül zaten bağlı.");
-        else fail(e, "Bağlantı kurulamadı");
+        if (e instanceof ops.ConflictError) toast("These two modules are already connected.");
+        else fail(e, "Couldn't create the link");
       }
     },
     [fail, markDirty, setGraph, toast],
@@ -396,9 +396,9 @@ function BrainWorkspace({ initialGraph, backend: initialBackend, initialSha, not
         const { graph: next, edge } = ops.updateEdge(graphRef.current, id, { label });
         if ((edge.label ?? "") === before) return;
         setGraph(next);
-        markDirty(edge.label ? `bağlantı etiketi “${short(edge.label)}”` : "bağlantı etiketi kaldırıldı");
+        markDirty(edge.label ? `connection label “${short(edge.label)}”` : "removed connection label");
       } catch (e) {
-        fail(e, "Etiket kaydedilemedi");
+        fail(e, "Couldn't save the label");
       }
     },
     [fail, markDirty, setGraph],
@@ -406,13 +406,13 @@ function BrainWorkspace({ initialGraph, backend: initialBackend, initialSha, not
 
   const deleteEdge = useCallback(
     (id: string, ask: boolean) => {
-      if (ask && !window.confirm("Bu bağlantı silinsin mi?")) return;
+      if (ask && !window.confirm("Delete this connection?")) return;
       setEdgePop(null);
       try {
         setGraph(ops.deleteEdge(graphRef.current, id).graph);
-        markDirty("bağlantı silindi");
+        markDirty("deleted connection");
       } catch (e) {
-        fail(e, "Bağlantı silinemedi");
+        fail(e, "Couldn't delete the connection");
       }
     },
     [fail, markDirty, setGraph],
@@ -424,9 +424,9 @@ function BrainWorkspace({ initialGraph, backend: initialBackend, initialSha, not
       try {
         const { graph: next, node } = ops.updateNode(graphRef.current, id, { x, y });
         setGraph(next);
-        markDirty(`“${short(node.title)}” taşındı`);
+        markDirty(`moved “${short(node.title)}”`);
       } catch (e) {
-        fail(e, "Konum kaydedilemedi");
+        fail(e, "Couldn't save the position");
       }
     },
     [fail, markDirty, setGraph],
@@ -442,7 +442,7 @@ function BrainWorkspace({ initialGraph, backend: initialBackend, initialSha, not
       await runSave();
       await settle();
       if (unsaved()) {
-        if (!window.confirm("Kaydedilmemiş değişiklikler var. Yine de çıkış yapılsın mı? (Bu değişiklikler kaybolur.)")) return;
+        if (!window.confirm("You have unsaved changes. Sign out anyway? (These changes will be lost.)")) return;
       }
     }
     clearTimer();
@@ -453,7 +453,7 @@ function BrainWorkspace({ initialGraph, backend: initialBackend, initialSha, not
     setEditModeState(false);
     setSaveState("clean");
     setSaveError(null);
-    toast("Çıkış yapıldı.");
+    toast("Signed out.");
   }, [clearTimer, runSave, toast]);
 
   // ---- canvas callbacks ----
@@ -578,18 +578,18 @@ function BrainWorkspace({ initialGraph, backend: initialBackend, initialSha, not
         <div className={styles.empty}>
           {editing ? (
             <>
-              <p className={styles.emptyTitle}>Boşluğa tıkla ve ilk modülünü oluştur</p>
-              <p className={styles.emptySub}>Sonra düğümün kenarındaki + tutamağını sürükleyerek alt modüller ekle.</p>
+              <p className={styles.emptyTitle}>Click on empty space to create your first module</p>
+              <p className={styles.emptySub}>Then drag the + handle on a node&apos;s edge to add sub-modules.</p>
             </>
           ) : admin ? (
             <>
-              <p className={styles.emptyTitle}>Henüz bomboş bir evren</p>
-              <p className={styles.emptySub}>Sağ üstten düzenleme modunu aç ve ilk modülünü oluştur.</p>
+              <p className={styles.emptyTitle}>Still an empty universe</p>
+              <p className={styles.emptySub}>Turn on edit mode (top right) and create your first module.</p>
             </>
           ) : (
             <>
-              <p className={styles.emptyTitle}>Henüz bomboş bir evren</p>
-              <p className={styles.emptySub}>Fikirler yakında burada parlamaya başlayacak.</p>
+              <p className={styles.emptyTitle}>Still an empty universe</p>
+              <p className={styles.emptySub}>Ideas will start shining here soon.</p>
             </>
           )}
         </div>
@@ -598,8 +598,8 @@ function BrainWorkspace({ initialGraph, backend: initialBackend, initialSha, not
       {!selectedNode && (
         <div className={styles.help} aria-hidden>
           {editing
-            ? "Boşluğa tıkla: ana modül · + tutamağını sürükle: alt modül / bağıntı · Del: sil · Ctrl+S: kaydet"
-            : "Sürükle: gezin · Tekerlek: yakınlaş · / : ara"}
+            ? "Click empty space: main module · Drag the + handle: sub-module / link · Del: delete · Ctrl+S: save"
+            : "Drag: pan · Wheel: zoom · / : search"}
         </div>
       )}
 

@@ -22,9 +22,9 @@ export default function CreatePopover({ apiRef, wx, wy, mode, parentTitle, onSub
   useWorldAnchor(apiRef, ref, wx, wy);
 
   return (
-    <div ref={ref} className={styles.popover} role="dialog" aria-label={mode === "main" ? "Yeni ana modül" : "Yeni alt modül"}>
+    <div ref={ref} className={styles.popover} role="dialog" aria-label={mode === "main" ? "New main module" : "New sub-module"}>
       <label className={styles.label} htmlFor="create-title">
-        {mode === "main" ? "Yeni ana modül" : `Alt modül · ${parentTitle ?? ""}`}
+        {mode === "main" ? "New main module" : `Sub-module · ${parentTitle ?? ""}`}
       </label>
       <input
         id="create-title"
@@ -32,7 +32,7 @@ export default function CreatePopover({ apiRef, wx, wy, mode, parentTitle, onSub
         autoFocus
         autoComplete="off"
         maxLength={LIMITS.title}
-        placeholder={mode === "main" ? "ör. Claude Opus 5.5" : "Alt modül adı"}
+        placeholder={mode === "main" ? "e.g. Claude Opus 5.5" : "Sub-module name"}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={(e) => {
@@ -43,10 +43,10 @@ export default function CreatePopover({ apiRef, wx, wy, mode, parentTitle, onSub
       />
       <div className={styles.hint}>
         <span>
-          <span className={styles.kbd}>Enter</span> oluştur
+          <span className={styles.kbd}>Enter</span> create
         </span>
         <span>
-          <span className={styles.kbd}>Esc</span> vazgeç
+          <span className={styles.kbd}>Esc</span> cancel
         </span>
       </div>
     </div>

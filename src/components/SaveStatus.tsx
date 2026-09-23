@@ -18,16 +18,16 @@ export default function SaveStatus({ state, error, onRetry, offsetRight }: Props
   return (
     <div className={`${styles.pill} ${styles[state]}`} style={style} role="status" aria-live="polite">
       <span className={styles.dot} aria-hidden />
-      {state === "dirty" && <span>Kaydedilmemiş değişiklik</span>}
-      {state === "saving" && <span>Kaydediliyor…</span>}
-      {state === "saved" && <span>Kaydedildi · ~1 dk içinde yayında</span>}
+      {state === "dirty" && <span>Unsaved changes</span>}
+      {state === "saving" && <span>Saving…</span>}
+      {state === "saved" && <span>Saved · live in ~1 min</span>}
       {state === "error" && (
         <>
           <span className={styles.errorText} title={error ?? undefined}>
-            Kaydedilemedi{error ? `: ${error}` : ""}
+            Couldn&apos;t save{error ? `: ${error}` : ""}
           </span>
           <button type="button" className={styles.retry} onClick={onRetry}>
-            Tekrar dene
+            Try again
           </button>
         </>
       )}

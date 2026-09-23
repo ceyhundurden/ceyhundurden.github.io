@@ -39,7 +39,7 @@ export function clearToken(): void {
   }
 }
 
-// ---------- UTF-8 safe base64 (atob/btoa alone would mangle ğüşıöç) ----------
+// ---------- UTF-8 safe base64 (atob/btoa alone would mangle non-ASCII characters) ----------
 
 export function utf8ToBase64(text: string): string {
   const bytes = new TextEncoder().encode(text);
@@ -66,14 +66,14 @@ export async function loadPublicGraph(): Promise<Graph> {
   try {
     res = await fetch(`/brain.json?t=${Date.now()}`, { cache: "no-store" });
   } catch {
-    throw new Error("harita yüklenemedi — bağlantını kontrol et");
+    throw new Error("couldn't load the map — check your connection");
   }
   if (res.status === 404) return { nodes: [], edges: [] };
-  if (!res.ok) throw new Error(`harita yüklenemedi (HTTP ${res.status})`);
+  if (!res.ok) throw new Error(`couldn't load the map (HTTP ${res.status})`);
   try {
     return normalizeGraph(await res.json());
   } catch {
-    throw new Error("brain.json okunamadı");
+    throw new Error("couldn't read brain.json");
   }
 }
 
@@ -94,14 +94,14 @@ export class GitHubError extends Error {
 
 function errorFor(res: Response): GitHubError {
   const s = res.status;
-  if (s === 401) return new GitHubError("auth", "token geçersiz veya süresi dolmuş", s);
+  if (s === 401) return new GitHubError("auth", "token is invalid or expired", s);
   if (s === 429 || (s === 403 && res.headers.get("x-ratelimit-remaining") === "0")) {
-    return new GitHubError("rate", "GitHub istek sınırı aşıldı; biraz sonra tekrar dene", s);
+    return new GitHubError("rate", "GitHub rate limit exceeded; try again in a bit", s);
   }
-  if (s === 403) return new GitHubError("permission", "token bu repoya yazma iznine sahip değil", s);
-  if (s === 404) return new GitHubError("not_found", "repo ya da dosya bulunamadı (token bu repoya erişemiyor olabilir)", s);
-  if (s === 409 || s === 422) return new GitHubError("conflict", "dosya başka bir yerden değişmiş (sha uyuşmazlığı)", s);
-  return new GitHubError("other", `GitHub hatası (HTTP ${s})`, s);
+  if (s === 403) return new GitHubError("permission", "token doesn't have write access to this repo", s);
+  if (s === 404) return new GitHubError("not_found", "repo or file not found (the token may not have access to this repo)", s);
+  if (s === 409 || s === 422) return new GitHubError("conflict", "the file was changed elsewhere (sha mismatch)", s);
+  return new GitHubError("other", `GitHub error (HTTP ${s})`, s);
 }
 
 interface ContentsFile {
@@ -129,13 +129,13 @@ export class GitHubBackend {
         cache: "no-store",
       });
     } catch {
-      throw new GitHubError("network", "GitHub'a ulaşılamadı");
+      throw new GitHubError("network", "couldn't reach GitHub");
     }
     if (!res.ok) throw errorFor(res);
     try {
       return (await res.json()) as T;
     } catch {
-      throw new GitHubError("other", "GitHub yanıtı okunamadı", res.status);
+      throw new GitHubError("other", "couldn't read the GitHub response", res.status);
     }
   }
 
@@ -153,11 +153,11 @@ export class GitHubBackend {
       repo = await this.request("GET", this.repoPath);
     } catch (e) {
       if (e instanceof GitHubError && e.kind === "not_found") {
-        throw new GitHubError("permission", "token bu repoya erişemiyor — erişim listesine ceyhundurden.github.io'yu ekle", 404);
+        throw new GitHubError("permission", "token can't access this repo — add ceyhundurden.github.io to its repository access list", 404);
       }
       throw e;
     }
-    if (repo.permissions?.push !== true) throw new GitHubError("permission", "token bu repoya yazma iznine sahip değil", 200);
+    if (repo.permissions?.push !== true) throw new GitHubError("permission", "token doesn't have write access to this repo", 200);
   }
 
   private async getFile(): Promise<ContentsFile> {
@@ -179,7 +179,7 @@ export class GitHubBackend {
       try {
         raw = JSON.parse(text);
       } catch {
-        throw new GitHubError("other", "repodaki brain.json geçerli JSON değil");
+        throw new GitHubError("other", "brain.json in the repo is not valid JSON");
       }
     }
     return { graph: normalizeGraph(raw), sha: file.sha };

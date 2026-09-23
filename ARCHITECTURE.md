@@ -1,54 +1,54 @@
-# Brain — Mimari
+# Brain — Architecture
 
-Herkese açık, sonsuz bir tuval üzerinde gezilebilen kişisel zihin haritası.
-Uzun yazı yok; kısa anekdotlardan oluşan, birbirine bağlı düğümler var.
+A public, personal mind map you can explore on an infinite canvas.
+No long-form writing; just interconnected nodes made of short anecdotes.
 
-## 1. Teknoloji
+## 1. Technology
 
-Yayın adresi: **https://ceyhundurden.github.io** (repo `ceyhundurden/ceyhundurden.github.io`, public).
+Live site: **https://ceyhundurden.github.io** (repo `ceyhundurden/ceyhundurden.github.io`, public).
 
-| Katman | Seçim | Neden |
+| Layer | Choice | Why |
 |---|---|---|
-| Framework | Next.js 15 + TypeScript, `output: "export"` (tamamen statik) | GitHub Pages sunucu çalıştıramaz; sadece statik dosya sunar |
-| Tuval | HTML5 Canvas 2D + kendi kamera sistemimiz | Binlerce düğümde akıcı; mercek (fisheye) efektini piksel seviyesinde uygulayabilmek için |
-| UI katmanı | React + düz CSS (CSS Modules) | Paneller, formlar, popover'lar canvas'ın üstünde DOM olarak |
-| Veri | Repodaki `public/brain.json` | Tek doğruluk kaynağı. Ziyaretçi statik dosyayı okur |
-| Yazma | Tarayıcıdan GitHub Contents API ile `public/brain.json`'a commit | Sunucusuz admin paneli |
-| Yetki | Fine-grained GitHub token (yalnızca bu repo, Contents: read/write), tarayıcıda `localStorage` | Parola kontrolü yapacak sunucu yok; yetkiyi GitHub'ın kendisi uygular |
-| Yayın | GitHub Actions: `main`'e her push'ta build edip Pages'e deploy eder | Admin commit'i ≈1 dk içinde canlıya çıkar |
+| Framework | Next.js 15 + TypeScript, `output: "export"` (fully static) | GitHub Pages can't run a server; it only serves static files |
+| Canvas | HTML5 Canvas 2D + our own camera system | Smooth with thousands of nodes; lets us apply the lens (fisheye) effect at the pixel level |
+| UI layer | React + plain CSS (CSS Modules) | Panels, forms and popovers as DOM on top of the canvas |
+| Data | `public/brain.json` in the repo | Single source of truth. Visitors read the static file |
+| Writes | Commits to `public/brain.json` from the browser via the GitHub Contents API | Serverless admin panel |
+| Auth | Fine-grained GitHub token (this repo only, Contents: read/write), kept in the browser's `localStorage` | There's no server to check a password; GitHub itself enforces permissions |
+| Deploy | GitHub Actions: builds and deploys to Pages on every push to `main` | An admin commit goes live in ≈1 min |
 
-### Kaydetme akışı
-1. Düzenleme modunda grafın çalışan kopyası tarayıcıda tutulur. Her değişiklik anında ekrana yansır.
-2. Son değişiklikten 3 sn sonra tüm `brain.json` tek commit olarak gönderilir (`sha` ile).
-   Sha uyuşmazlığında (409/422) dosya yeniden çekilir ve tekrar denenir.
-3. Durum göstergesi: *Kaydedilmemiş değişiklik → Kaydediliyor → Kaydedildi · ~1 dk içinde yayında*.
-   Kaydedilmemiş değişiklik varken sayfadan çıkılırsa uyarı verilir.
-4. Admin modunda veri, en güncel hali için GitHub API'den okunur. Ziyaretçiler `/brain.json`'u okur.
+### Save flow
+1. In edit mode, the working copy of the graph is kept in the browser. Every change shows up on screen immediately.
+2. 3 s after the last change, the whole `brain.json` is sent as a single commit (with its `sha`).
+   On a sha mismatch (409/422) the file's sha is re-fetched and the write is retried.
+3. Status indicator: *Unsaved changes → Saving → Saved · live in ~1 min*.
+   Leaving the page with unsaved changes triggers a warning.
+4. In admin mode the data is read from the GitHub API to get the freshest version. Visitors read `/brain.json`.
 
-## 2. Veri modeli
+## 2. Data model
 
 ```ts
 type NodeKind = "main" | "sub";
 
 interface BrainNode {
   id: string;
-  kind: NodeKind;          // ana modül / alt modül
+  kind: NodeKind;          // main module / sub-module
   title: string;
-  x: number; y: number;    // dünya koordinatı (sınırsız)
-  color?: string;          // ana modül rengi; alt modüller ebeveynden miras alır
-  blocks: ContentBlock[];  // girdiler
+  x: number; y: number;    // world coordinates (unbounded)
+  color?: string;          // main module color; sub-modules inherit from their parent
+  blocks: ContentBlock[];  // entries
   createdAt: string; updatedAt: string;
 }
 
 type ContentBlock =
-  | { id: string; type: "text";  text: string }                 // kısa anekdot
+  | { id: string; type: "text";  text: string }                 // short anecdote
   | { id: string; type: "quote"; text: string; source?: string }
   | { id: string; type: "link";  url: string; title?: string; note?: string }
   | { id: string; type: "image"; url: string; caption?: string }
   | { id: string; type: "video"; url: string; caption?: string } // YouTube/Vimeo embed
   | { id: string; type: "code";  code: string; lang?: string };
 
-type EdgeKind = "child" | "link";   // child = hiyerarşi (düz çizgi), link = bağıntı (kesikli)
+type EdgeKind = "child" | "link";   // child = hierarchy (solid line), link = cross-link (dashed)
 
 interface BrainEdge { id: string; source: string; target: string; kind: EdgeKind; label?: string }
 
@@ -57,57 +57,57 @@ interface Graph { nodes: BrainNode[]; edges: BrainEdge[] }
 
 ## 3. API
 
-API sunucusu yok. İstemci tarafında bir `Backend` arayüzü var:
+There is no API server. On the client side, `src/lib/backend.ts` provides two access paths:
 
-- `StaticBackend` (ziyaretçi): `GET /brain.json` ile salt okunur erişim
-- `GitHubBackend` (admin): Contents API ile `public/brain.json`'u okur (`sha` ile) ve yazar
+- `loadPublicGraph()` (visitor): read-only access via `GET /brain.json`
+- `GitHubBackend` (admin): reads (with its `sha`) and writes `public/brain.json` via the Contents API
 
-Graf üzerindeki tüm işlemler (düğüm/kenar ekle, güncelle, sil) tarayıcıda saf
-fonksiyonlarla yapılır (`src/lib/graph-ops.ts`) ve `validate.ts` ile doğrulanır.
+All operations on the graph (add, update, delete nodes/edges) run in the browser as pure
+functions (`src/lib/graph-ops.ts`) and are validated by `validate.ts`.
 
-Düğüm silinince ona bağlı kenarlar da silinir.
+Deleting a node also deletes the edges attached to it.
 
-## 4. Tuval motoru (`src/engine/`)
+## 4. Canvas engine (`src/engine/`)
 
-- **Kamera:** `{x, y, zoom}`. Sürükleyerek kaydırma (bırakınca ataletle süzülür),
-  imlece doğru tekerlek zoom'u (0.1x–4x), dokunmatikte iki parmak.
-- **Sonsuzluk hissi:** Arka plan prosedüreldir, yani saklanmaz, hesaplanır. 3 parallax
-  katmanında, hücre koordinatından hash'lenen deterministik "yıldız" noktaları ve çok
-  hafif bir nokta ızgarası. Nereye gidilirse gidilsin boşluk devam eder, hiçbir zaman
-  kenara çarpılmaz. Kenarlarda hafif vinyet, uzakta hafif sis.
-- **Mercek:** İmlecin etrafında yarıçapı ~160px olan bir fisheye bozulması
-  (Sarkar–Brown). Yıldızlara, kenarlara ve düğümlere ekran uzayında uygulanır.
-  İmlece yakın düğümler büyür, uzaktakiler sıkışır. Kenarı ince, parlak bir halka.
-  Zaman içinde yumuşak geçişle açılıp kapanır; imleç tuvalden çıkınca söner.
-- **Çizim:** `requestAnimationFrame` döngüsünde ekran dışındaki düğümler atlanır.
-  Ana modüller büyük ve parlayan, alt modüller küçük olur. `child` kenarlar düz ve
-  hafif kavisli, `link` kenarlar kesikli çizilir.
-- **Hit-test:** Ekran koordinatı → dünya koordinatı (merceğin tersiyle birlikte).
+- **Camera:** `{x, y, zoom}`. Drag to pan (glides with inertia on release),
+  wheel zoom toward the cursor (0.1x–4x), two-finger gestures on touch.
+- **Sense of infinity:** The background is procedural, i.e. computed rather than stored. Across 3 parallax
+  layers: deterministic "star" points hashed from cell coordinates, plus a very
+  faint dot grid. Wherever you go, the void continues; you never
+  hit an edge. A soft vignette around the edges, a light haze in the distance.
+- **Lens:** A fisheye distortion with a radius of ~110px around the cursor
+  (Sarkar–Brown). Applied to stars, edges and nodes in screen space.
+  Nodes near the cursor grow, those farther away are compressed. Its rim is a thin, bright ring.
+  It fades in and out smoothly over time; it fades out when the cursor leaves the canvas.
+- **Rendering:** In the `requestAnimationFrame` loop, off-screen nodes are skipped.
+  Main modules are large and glowing, sub-modules are small. `child` edges are drawn solid and
+  slightly curved, `link` edges dashed.
+- **Hit-testing:** Screen coordinates → world coordinates (including the inverse of the lens).
 
-## 5. Etkileşim
+## 5. Interaction
 
-**Ziyaretçi modu (herkes)**
-- Kaydır / zoom yap / merceği gez.
-- Düğüme tıklayınca kamera yumuşakça oraya kayar, sağda okuma paneli açılır
-  (başlık, bloklar, bağlı düğümler listesi, onlara tıklayıp atlama).
-- Düğümün üstüne gelince komşu ağı vurgulanır, gerisi solar.
-- `/` tuşuyla arama yapılır, sonuca uçulur.
+**Visitor mode (everyone)**
+- Pan / zoom / move the lens around.
+- Clicking a node smoothly moves the camera there and opens a reading panel on the right
+  (title, blocks, list of connected nodes, click them to jump).
+- Hovering a node highlights its neighborhood; the rest fades.
+- Press `/` to search and fly to the result.
 
-**Düzenleme modu (giriş yapınca, sağ üstte anahtar)**
-- **Boşluğa tıkla** → popover açılır, başlık yazıp Enter'a basınca **ana modül** oluşur.
-- **Düğümden boşluğa sürükle** (düğüm kenarındaki `+` tutamağından) → **alt modül**
-  oluşur ve bir `child` kenarıyla bağlanır.
-- **Düğümden düğüme sürükle** (tutamaktan) → **bağıntı** (`link` kenarı) oluşur.
-- **Düğümü gövdesinden sürükle** → taşınır, bırakınca konum kaydedilir.
-- **Düğüme tıkla** → sağ panel düzenleyiciye döner: başlık, renk, blok ekle/sil/sırala.
-- **Kenara tıkla** → sil / etiket ver.
-- `Delete` tuşu seçili öğeyi siler (onay ister). `Esc` seçimi bırakır.
+**Edit mode (after signing in, switch in the top right)**
+- **Click empty space** → a popover opens; type a title and press Enter to create a **main module**.
+- **Drag from a node onto empty space** (from the `+` handle on the node's edge) → a **sub-module**
+  is created and connected with a `child` edge.
+- **Drag from a node onto another node** (from the handle) → creates a **link** (`link` edge).
+- **Drag a node by its body** → moves it; the position is saved on release.
+- **Click a node** → the right panel turns into an editor: title, color, add/delete/reorder blocks.
+- **Click an edge** → delete / add a label.
+- The `Delete` key removes the selected item (asks for confirmation). `Esc` clears the selection.
 
-## 6. Klasör yapısı
+## 6. Folder structure
 
 ```
 src/
-  app/            page.tsx (tuval), login/page.tsx (token girişi)
+  app/            page.tsx (canvas), login/page.tsx (token sign-in)
   engine/         camera.ts, lens.ts, background.ts, renderer.ts, hittest.ts
   components/     BrainCanvas.tsx, NodePanel.tsx, BlockEditor.tsx, CreatePopover.tsx, Toolbar.tsx, Search.tsx, SaveStatus.tsx
   lib/            types.ts, graph-ops.ts, validate.ts, backend.ts (Static + GitHub)

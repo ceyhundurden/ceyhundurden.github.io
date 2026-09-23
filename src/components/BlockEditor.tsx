@@ -6,12 +6,12 @@ import { safeHttpUrl, videoEmbedUrl } from "@/lib/url";
 import styles from "./NodePanel.module.css";
 
 export const BLOCK_LABELS: Record<BlockType, string> = {
-  text: "Anekdot",
-  quote: "Alıntı",
-  link: "Bağlantı",
-  image: "Görsel",
+  text: "Anecdote",
+  quote: "Quote",
+  link: "Link",
+  image: "Image",
   video: "Video",
-  code: "Kod",
+  code: "Code",
 };
 
 export function newBlock(type: BlockType): ContentBlock {
@@ -124,7 +124,7 @@ interface EditorProps {
 
 function UrlHint({ url }: { url: string }) {
   if (!url.trim() || safeHttpUrl(url)) return null;
-  return <div className={styles.fieldError}>Geçerli bir http(s) adresi gir — kaydedilmeyecek.</div>;
+  return <div className={styles.fieldError}>Enter a valid http(s) URL — this won&apos;t be saved.</div>;
 }
 
 /** Editable form for a single block. */
@@ -147,13 +147,13 @@ export function BlockEditor({ block, index, count, onChange, onMove, onRemove }:
   let body: React.ReactNode;
   switch (block.type) {
     case "text":
-      body = field("Kısa bir anekdot…", block.text, LIMITS.text, (text) => onChange({ ...block, text }), true);
+      body = field("A short anecdote…", block.text, LIMITS.text, (text) => onChange({ ...block, text }), true);
       break;
     case "quote":
       body = (
         <>
-          {field("Alıntı metni", block.text, LIMITS.text, (text) => onChange({ ...block, text }), true)}
-          {field("Kaynak (isteğe bağlı)", block.source, LIMITS.quoteSource, (source) => onChange({ ...block, source }))}
+          {field("Quote text", block.text, LIMITS.text, (text) => onChange({ ...block, text }), true)}
+          {field("Source (optional)", block.source, LIMITS.quoteSource, (source) => onChange({ ...block, source }))}
         </>
       );
       break;
@@ -162,37 +162,37 @@ export function BlockEditor({ block, index, count, onChange, onMove, onRemove }:
         <>
           {field("https://…", block.url, LIMITS.url, (url) => onChange({ ...block, url }))}
           <UrlHint url={block.url} />
-          {field("Başlık (isteğe bağlı)", block.title, LIMITS.shortText, (title) => onChange({ ...block, title }))}
-          {field("Not (isteğe bağlı)", block.note, LIMITS.shortText, (note) => onChange({ ...block, note }))}
+          {field("Title (optional)", block.title, LIMITS.shortText, (title) => onChange({ ...block, title }))}
+          {field("Note (optional)", block.note, LIMITS.shortText, (note) => onChange({ ...block, note }))}
         </>
       );
       break;
     case "image":
       body = (
         <>
-          {field("Görsel adresi (https://…)", block.url, LIMITS.url, (url) => onChange({ ...block, url }))}
+          {field("Image URL (https://…)", block.url, LIMITS.url, (url) => onChange({ ...block, url }))}
           <UrlHint url={block.url} />
-          {field("Açıklama (isteğe bağlı)", block.caption, LIMITS.shortText, (caption) => onChange({ ...block, caption }))}
+          {field("Caption (optional)", block.caption, LIMITS.shortText, (caption) => onChange({ ...block, caption }))}
         </>
       );
       break;
     case "video":
       body = (
         <>
-          {field("YouTube ya da Vimeo adresi", block.url, LIMITS.url, (url) => onChange({ ...block, url }))}
+          {field("YouTube or Vimeo URL", block.url, LIMITS.url, (url) => onChange({ ...block, url }))}
           <UrlHint url={block.url} />
           {block.url.trim() && safeHttpUrl(block.url) && !videoEmbedUrl(block.url) && (
-            <div className={styles.fieldError}>Gömülemiyor; bağlantı olarak gösterilecek.</div>
+            <div className={styles.fieldError}>Can&apos;t be embedded; it will be shown as a link.</div>
           )}
-          {field("Açıklama (isteğe bağlı)", block.caption, LIMITS.shortText, (caption) => onChange({ ...block, caption }))}
+          {field("Caption (optional)", block.caption, LIMITS.shortText, (caption) => onChange({ ...block, caption }))}
         </>
       );
       break;
     case "code":
       body = (
         <>
-          {field("Dil (ör. ts, python)", block.lang, LIMITS.lang, (lang) => onChange({ ...block, lang }))}
-          {field("Kod", block.code, LIMITS.code, (code) => onChange({ ...block, code }), true, true)}
+          {field("Language (e.g. ts, python)", block.lang, LIMITS.lang, (lang) => onChange({ ...block, lang }))}
+          {field("Code", block.code, LIMITS.code, (code) => onChange({ ...block, code }), true, true)}
         </>
       );
       break;
@@ -203,13 +203,13 @@ export function BlockEditor({ block, index, count, onChange, onMove, onRemove }:
       <div className={styles.blockHead}>
         <span className={styles.blockType}>{BLOCK_LABELS[block.type]}</span>
         <div className={styles.blockActions}>
-          <button type="button" onClick={() => onMove(-1)} disabled={index === 0} title="Yukarı taşı" aria-label="Yukarı taşı">
+          <button type="button" onClick={() => onMove(-1)} disabled={index === 0} title="Move up" aria-label="Move up">
             ↑
           </button>
-          <button type="button" onClick={() => onMove(1)} disabled={index === count - 1} title="Aşağı taşı" aria-label="Aşağı taşı">
+          <button type="button" onClick={() => onMove(1)} disabled={index === count - 1} title="Move down" aria-label="Move down">
             ↓
           </button>
-          <button type="button" onClick={onRemove} title="Bloğu sil" aria-label="Bloğu sil" className={styles.blockRemove}>
+          <button type="button" onClick={onRemove} title="Delete block" aria-label="Delete block" className={styles.blockRemove}>
             ×
           </button>
         </div>

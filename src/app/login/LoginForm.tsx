@@ -28,7 +28,7 @@ export default function LoginForm() {
       setToken(t);
       window.location.assign("/");
     } catch (err) {
-      setError(err instanceof Error && err.message ? `${err.message[0].toLocaleUpperCase("tr")}${err.message.slice(1)}.` : "Doğrulanamadı.");
+      setError(err instanceof Error && err.message ? `${err.message[0].toUpperCase()}${err.message.slice(1)}.` : "Couldn't verify the token.");
       setBusy(false);
     }
   };
@@ -39,12 +39,12 @@ export default function LoginForm() {
         <span className={styles.dot} />
         brain
       </div>
-      <h1 className={styles.title}>Yönetici girişi</h1>
-      <p className={styles.sub}>Düzenleme için bu repoya yazabilen bir GitHub token&apos;ı gir.</p>
+      <h1 className={styles.title}>Admin sign-in</h1>
+      <p className={styles.sub}>To edit, enter a GitHub token that can write to this repo.</p>
       <ol className={styles.steps}>
         <li>
           <a href={NEW_TOKEN_URL} target="_blank" rel="noopener noreferrer">
-            Yeni fine-grained token oluştur ↗
+            Create a new fine-grained token ↗
           </a>
         </li>
         <li>
@@ -53,7 +53,7 @@ export default function LoginForm() {
         <li>
           <b>Permissions</b> → <b>Contents</b>: <b>Read and write</b>
         </li>
-        <li>Oluşan token&apos;ı kopyalayıp aşağıya yapıştır.</li>
+        <li>Copy the generated token and paste it below.</li>
       </ol>
       <input
         className={styles.input}
@@ -69,11 +69,11 @@ export default function LoginForm() {
       />
       {error && <p className={styles.error}>{error}</p>}
       <button className={styles.button} type="submit" disabled={busy || !token.trim()}>
-        {busy ? "Doğrulanıyor…" : "Giriş yap"}
+        {busy ? "Verifying…" : "Sign in"}
       </button>
-      <p className={styles.note}>Token yalnızca bu tarayıcıda saklanır; çıkış yapınca silinir.</p>
+      <p className={styles.note}>The token is stored only in this browser and is removed when you sign out.</p>
       <Link href="/" className={styles.back}>
-        ← Haritaya dön
+        ← Back to the map
       </Link>
     </form>
   );

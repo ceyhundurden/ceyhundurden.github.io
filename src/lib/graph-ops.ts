@@ -45,7 +45,7 @@ export function createNode(g: Graph, input: unknown): { graph: Graph; node: Brai
   let parent: BrainNode | undefined;
   if (v.parentId) {
     parent = g.nodes.find((n) => n.id === v.parentId);
-    if (!parent) throw new NotFoundError("üst düğüm bulunamadı");
+    if (!parent) throw new NotFoundError("parent node not found");
   }
   const now = new Date().toISOString();
   const node: BrainNode = {
@@ -82,7 +82,7 @@ export function updateNode(g: Graph, id: string, patch: unknown): { graph: Graph
   validateId(id);
   const p = validateNodePatch(patch);
   const cur = g.nodes.find((n) => n.id === id);
-  if (!cur) throw new NotFoundError("düğüm bulunamadı");
+  if (!cur) throw new NotFoundError("node not found");
   const node = applyPatch(cur, p);
   return { graph: { ...g, nodes: g.nodes.map((n) => (n.id === id ? node : n)) }, node };
 }
@@ -93,14 +93,14 @@ export function updateNode(g: Graph, id: string, patch: unknown): { graph: Graph
  */
 export function applyNodeDraft(g: Graph, id: string, patch: NodePatch): Graph {
   const cur = g.nodes.find((n) => n.id === id);
-  if (!cur) throw new NotFoundError("düğüm bulunamadı");
+  if (!cur) throw new NotFoundError("node not found");
   const node = applyPatch(cur, patch);
   return { ...g, nodes: g.nodes.map((n) => (n.id === id ? node : n)) };
 }
 
 /** Deletes the node and every edge touching it. */
 export function deleteNode(g: Graph, id: string): { graph: Graph; removedEdgeIds: string[] } {
-  if (!g.nodes.some((n) => n.id === id)) throw new NotFoundError("düğüm bulunamadı");
+  if (!g.nodes.some((n) => n.id === id)) throw new NotFoundError("node not found");
   const removedEdgeIds = g.edges.filter((e) => e.source === id || e.target === id).map((e) => e.id);
   return {
     graph: { nodes: g.nodes.filter((n) => n.id !== id), edges: g.edges.filter((e) => e.source !== id && e.target !== id) },
@@ -111,10 +111,10 @@ export function deleteNode(g: Graph, id: string): { graph: Graph; removedEdgeIds
 export function createEdge(g: Graph, input: unknown): { graph: Graph; edge: BrainEdge } {
   const v = validateNewEdge(input);
   if (!g.nodes.some((n) => n.id === v.source) || !g.nodes.some((n) => n.id === v.target)) {
-    throw new NotFoundError("düğüm bulunamadı");
+    throw new NotFoundError("node not found");
   }
   const dup = g.edges.some((e) => (e.source === v.source && e.target === v.target) || (e.source === v.target && e.target === v.source));
-  if (dup) throw new ConflictError("bu iki düğüm zaten bağlı");
+  if (dup) throw new ConflictError("these two nodes are already connected");
   const edge: BrainEdge = { id: newId(), source: v.source, target: v.target, kind: v.kind, ...(v.label ? { label: v.label } : {}) };
   return { graph: { ...g, edges: [...g.edges, edge] }, edge };
 }
@@ -122,7 +122,7 @@ export function createEdge(g: Graph, input: unknown): { graph: Graph; edge: Brai
 export function updateEdge(g: Graph, id: string, patch: unknown): { graph: Graph; edge: BrainEdge } {
   const p = validateEdgePatch(patch);
   const cur = g.edges.find((e) => e.id === id);
-  if (!cur) throw new NotFoundError("bağlantı bulunamadı");
+  if (!cur) throw new NotFoundError("connection not found");
   const edge: BrainEdge = { ...cur };
   if (p.label) edge.label = p.label;
   else delete edge.label;
@@ -130,7 +130,7 @@ export function updateEdge(g: Graph, id: string, patch: unknown): { graph: Graph
 }
 
 export function deleteEdge(g: Graph, id: string): { graph: Graph } {
-  if (!g.edges.some((e) => e.id === id)) throw new NotFoundError("bağlantı bulunamadı");
+  if (!g.edges.some((e) => e.id === id)) throw new NotFoundError("connection not found");
   return { graph: { ...g, edges: g.edges.filter((e) => e.id !== id) } };
 }
 
@@ -141,7 +141,7 @@ export function deleteEdge(g: Graph, id: string): { graph: Graph } {
 export function prepareForSave(working: Graph, lastSaved: Graph | null): Graph {
   const prevTitle = new Map((lastSaved?.nodes ?? []).map((n) => [n.id, n.title]));
   const nodes = working.nodes.map((n): BrainNode => {
-    const title = n.title.trim() || prevTitle.get(n.id)?.trim() || "Adsız";
+    const title = n.title.trim() || prevTitle.get(n.id)?.trim() || "Untitled";
     const blocks = n.blocks.map((b): ContentBlock =>
       b.type === "link" || b.type === "image" || b.type === "video" ? { ...b, url: safeHttpUrl(b.url) ?? "" } : b,
     );

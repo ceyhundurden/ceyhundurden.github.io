@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Brain — dijital zihin haritası",
-  description: "Sonsuz bir tuval üzerinde birbirine bağlı kısa notlardan oluşan kişisel zihin haritası.",
+  title: "Brain — a digital mind map",
+  description: "A personal mind map of short, interconnected notes on an infinite canvas.",
 };
 
 export const viewport: Viewport = {
@@ -19,7 +19,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr" className={inter.variable}>
+    <html lang="en" className={inter.variable}>
       <body>{children}</body>
     </html>
   );

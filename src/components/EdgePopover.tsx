@@ -27,9 +27,9 @@ export default function EdgePopover({ apiRef, edge, wx, wy, onSave, onDelete, on
   };
 
   return (
-    <div ref={ref} className={styles.popover} role="dialog" aria-label="Bağlantı">
+    <div ref={ref} className={styles.popover} role="dialog" aria-label="Connection">
       <label className={styles.label} htmlFor="edge-label">
-        {edge.kind === "child" ? "Hiyerarşi bağı" : "Bağıntı"} · etiket
+        {edge.kind === "child" ? "Hierarchy connection" : "Link"} · label
       </label>
       <input
         id="edge-label"
@@ -37,7 +37,7 @@ export default function EdgePopover({ apiRef, edge, wx, wy, onSave, onDelete, on
         autoFocus
         autoComplete="off"
         maxLength={LIMITS.label}
-        placeholder="ör. ilham verdi"
+        placeholder="e.g. inspired"
         value={label}
         onChange={(e) => setLabel(e.target.value)}
         onKeyDown={(e) => {
@@ -48,10 +48,10 @@ export default function EdgePopover({ apiRef, edge, wx, wy, onSave, onDelete, on
       />
       <div className={styles.row}>
         <button type="button" className={styles.button} onClick={commit}>
-          Kaydet
+          Save
         </button>
         <button type="button" className={styles.danger} onClick={onDelete}>
-          Bağlantıyı sil
+          Delete connection
         </button>
       </div>
     </div>

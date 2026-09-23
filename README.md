@@ -1,88 +1,88 @@
 # Brain
 
-Herkese açık, sonsuz ve karanlık bir tuval üzerinde gezilebilen dijital zihin haritası.
-Ana modüller, alt modüller ve aralarındaki bağlar; her düğümde kısa notlar
-(anekdot, alıntı, bağlantı, görsel, video, kod). Mimari için bkz. `ARCHITECTURE.md`.
+A public digital mind map you can explore on an infinite, dark canvas.
+Main modules, sub-modules and the connections between them; every node holds short notes
+(anecdote, quote, link, image, video, code). See `ARCHITECTURE.md` for the architecture.
 
-Yayın adresi: **https://ceyhundurden.github.io**
+Live site: **https://ceyhundurden.github.io**
 
-## Nasıl çalışır
+## How it works
 
-Site tamamen statiktir (Next.js `output: "export"`), GitHub Pages'ten sunulur; sunucu yoktur.
+The site is fully static (Next.js `output: "export"`) and served from GitHub Pages; there is no server.
 
-- **Veri:** repodaki `public/brain.json` tek doğruluk kaynağıdır. Ziyaretçiler bu statik
-  dosyayı okur.
-- **Düzenleme:** giriş yapınca tarayıcı, veriyi doğrudan GitHub API'den (en güncel hali)
-  okur. Yaptığın her değişiklik anında ekrana yansır; son değişiklikten 3 sn sonra tüm
-  `brain.json` tek bir commit olarak `main`'e gönderilir (`Ctrl+S` ile hemen kaydedebilirsin).
-  Sağ üstteki gösterge durumu söyler: *Kaydedilmemiş değişiklik → Kaydediliyor… →
-  Kaydedildi · ~1 dk içinde yayında*. Kaydetme başarısız olursa değişiklikler tarayıcıda
-  kalır, **Tekrar dene** ile yeniden gönderilir. Kaydedilmemiş değişiklik varken sayfadan
-  çıkmaya çalışırsan tarayıcı uyarır.
-- **Yayın:** `main`'e her push'ta GitHub Actions (`.github/workflows/deploy.yml`) siteyi
-  derleyip Pages'e yükler. Yani admin commit'i yaklaşık 1 dakika içinde canlıya çıkar.
-- **Yetki:** parola yok; yetkiyi GitHub'ın kendisi uygular. Giriş, yalnızca bu repoya
-  yazabilen bir fine-grained token ile yapılır. Token yalnızca tarayıcının `localStorage`'ında
-  (`brain.gh-token`) durur, **Çıkış** ile silinir.
+- **Data:** `public/brain.json` in the repo is the single source of truth. Visitors read this
+  static file.
+- **Editing:** once you sign in, the browser reads the data straight from the GitHub API (the
+  freshest version). Every change you make shows up on screen immediately; 3 s after the last
+  change the whole `brain.json` is sent to `main` as a single commit (press `Ctrl+S` to save right away).
+  The indicator in the top right shows the status: *Unsaved changes → Saving… →
+  Saved · live in ~1 min*. If saving fails, your changes stay in the browser and
+  **Try again** re-sends them. If you try to leave the page with unsaved changes,
+  the browser warns you.
+- **Deploy:** on every push to `main`, GitHub Actions (`.github/workflows/deploy.yml`) builds
+  the site and uploads it to Pages. So an admin commit goes live in about a minute.
+- **Auth:** there is no password; GitHub itself enforces permissions. You sign in with a
+  fine-grained token that can write only to this repo. The token lives only in the browser's
+  `localStorage` (`brain.gh-token`) and is removed with **Sign out**.
 
-## Token oluşturma
+## Creating a token
 
-1. https://github.com/settings/personal-access-tokens/new adresine git.
-2. Bir ad ve süre ver (ör. 90 gün).
+1. Go to https://github.com/settings/personal-access-tokens/new.
+2. Give it a name and an expiration (e.g. 90 days).
 3. **Repository access** → **Only select repositories** → `ceyhundurden.github.io`.
 4. **Permissions** → **Repository permissions** → **Contents: Read and write**
-   (Metadata: Read-only otomatik eklenir). Başka izin verme.
-5. **Generate token**, çıkan `github_pat_…` değerini kopyala.
-6. Sitede sağ üstteki **Giriş** → token'ı yapıştır → **Giriş yap**.
+   (Metadata: Read-only is added automatically). Don't grant anything else.
+5. **Generate token**, then copy the resulting `github_pat_…` value.
+6. On the site, click **Sign in** in the top right → paste the token → **Sign in**.
 
-Token'ın süresi dolarsa ya da iptal edilirse site bunu açılışta fark eder, token'ı siler ve
-seni salt okunur moda düşürür; yeni bir token ile tekrar giriş yapman yeterli.
+If the token expires or is revoked, the site notices on load, discards the token and
+drops you into read-only mode; just sign in again with a new token.
 
-## Yerel geliştirme
+## Local development
 
 ```bash
 npm install
 npm run dev        # http://localhost:3000
 ```
 
-Ziyaretçi modunda veri `public/brain.json`'dan okunur.
+In visitor mode the data is read from `public/brain.json`.
 
-> **Dikkat:** yerelde de giriş yaparsan düzenlemeler doğrudan **canlı repoya** commit edilir
-> (GitHub API'ye yazılır, yerel dosyaya değil) ve ~1 dk sonra siteye çıkar. Sadece arayüz
-> denemesi yapacaksan giriş yapma. Yerel `public/brain.json` ile repodaki arasında fark
-> oluşursa push'tan önce `git pull` yap.
+> **Warning:** if you sign in locally too, edits are committed directly to the **live repo**
+> (written through the GitHub API, not to the local file) and appear on the site ~1 min later.
+> Don't sign in if you only want to try out the UI. If your local `public/brain.json` and the
+> repo's copy diverge, run `git pull` before pushing.
 
-Statik çıktıyı üretmek için: `npm run build` → `out/` klasörü (istersen `npx serve out` ile
-bak). Kod kalitesi: `npm run lint`, `npx tsc --noEmit`.
+To produce the static output: `npm run build` → the `out/` folder (preview it with
+`npx serve out` if you like). Code quality: `npm run lint`, `npx tsc --noEmit`.
 
-## Yayın akışı
+## Deploy flow
 
-1. GitHub'da `ceyhundurden/ceyhundurden.github.io` reposu (public) ve bu projeyi `main`
-   dalına push et.
+1. Push this project to the `main` branch of the (public) `ceyhundurden/ceyhundurden.github.io`
+   repo on GitHub.
 2. Repo → **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-3. Her push'ta (ya da Actions sekmesinden **Run workflow** ile) site derlenir ve yayınlanır.
-4. İçerik düzenlemeleri de birer commit olduğundan aynı akışla yayına çıkar; kod değiştirmeden
-   önce `git pull` ile bu commit'leri yerele çekmeyi unutma.
+3. On every push (or via **Run workflow** in the Actions tab) the site is built and published.
+4. Content edits are commits too, so they go live through the same flow; before changing code,
+   don't forget to `git pull` those commits locally.
 
-## Kullanım
+## Usage
 
-**Herkes:** sürükleyerek gezin (bırakınca süzülür), tekerlek / iki parmakla yakınlaş,
-imlecin etrafındaki mercekle yakından bak. Düğüme tıkla → sağda okuma paneli açılır.
-`/` ile ara, Enter ile modüle uç. Adres çubuğundaki `#düğüm-id` ile bir modüle doğrudan
-bağlantı verilebilir.
+**Everyone:** drag to pan (it glides when released), use the wheel / two fingers to zoom,
+and look closer with the lens around the cursor. Click a node → a reading panel opens on the right.
+Press `/` to search and Enter to fly to a module. You can link directly to a module with
+`#node-id` in the address bar.
 
-**Düzenleme modu:** sağ üstteki **Giriş** → token → **Düzenle** anahtarını aç (kısayol `E`).
+**Edit mode:** **Sign in** in the top right → token → turn on the **Edit** switch (shortcut `E`).
 
-- **Boşluğa tıkla** → başlık yaz, Enter → yeni ana modül.
-- Düğümün kenarındaki **+** tutamağını **boşluğa sürükle** → alt modül (adını yazıp Enter).
-- **+** tutamağını **başka bir düğüme sürükle** → bağıntı (kesikli çizgi).
-- **Düğümü gövdesinden sürükle** → taşı; bırakınca konum kaydedilir.
-- **Düğüme tıkla** → panelde başlık, renk (ana modüller) ve bloklar düzenlenir; değişiklikler
-  otomatik kaydedilir.
-- **Kenara tıkla** → etiket ver ya da sil.
-- `Delete` seçili düğümü / bağlantıyı siler (onay ister), `Esc` seçimi bırakır, `Ctrl+S` hemen kaydeder.
+- **Click empty space** → type a title, Enter → new main module.
+- **Drag** the **+** handle on a node's edge **onto empty space** → sub-module (type its name, then Enter).
+- **Drag** the **+** handle **onto another node** → link (dashed line).
+- **Drag a node by its body** → move it; the position is saved when you release.
+- **Click a node** → edit its title, color (main modules) and blocks in the panel; changes
+  are saved automatically.
+- **Click an edge** → give it a label or delete it.
+- `Delete` removes the selected node / connection (asks for confirmation), `Esc` clears the selection, `Ctrl+S` saves immediately.
 
-## Yedek
+## Backup
 
-Tüm veri `public/brain.json`'dadır ve her değişiklik bir git commit'idir; geçmiş sürümlere
-repo geçmişinden dönülebilir.
+All data lives in `public/brain.json` and every change is a git commit; you can go back to
+earlier versions through the repo history.
